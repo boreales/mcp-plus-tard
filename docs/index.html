@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plus Tard MCP — Documentation utilisateur</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --bg-soft: #181b22;
+    --bg-code: #11141a;
+    --fg: #e6e8ec;
+    --fg-muted: #9aa3b2;
+    --border: #262a33;
+    --accent: #7c9cff;
+    --accent-soft: #2b3556;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --danger: #f87171;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+  }
+  nav {
+    background: var(--bg-soft);
+    border-right: 1px solid var(--border);
+    padding: 32px 24px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  nav h1 {
+    font-size: 18px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  nav .tag {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 24px;
+  }
+  nav ul { list-style: none; padding: 0; margin: 0; }
+  nav ul li { margin: 2px 0; }
+  nav a {
+    display: block;
+    color: var(--fg-muted);
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  nav a:hover { background: var(--bg); color: var(--fg); }
+  nav .group {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11px;
+    color: var(--fg-muted);
+    margin: 20px 10px 6px;
+  }
+  main {
+    padding: 48px 64px;
+    max-width: 920px;
+  }
+  h1.page-title {
+    font-size: 32px;
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
+  }
+  .lede {
+    color: var(--fg-muted);
+    font-size: 18px;
+    margin: 0 0 40px;
+  }
+  h2 {
+    font-size: 22px;
+    margin-top: 48px;
+    margin-bottom: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-size: 17px;
+    margin-top: 28px;
+    margin-bottom: 8px;
+  }
+  p { margin: 8px 0 12px; }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.9em;
+    background: var(--bg-code);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  pre code { background: none; border: none; padding: 0; }
+  .pre-label {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--fg-muted);
+    background: var(--bg-soft);
+    padding: 2px 8px;
+    border-radius: 4px 4px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    margin-bottom: -1px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .callout {
+    background: var(--bg-soft);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.danger { border-left-color: var(--danger); }
+  .callout strong { color: var(--fg); }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    color: var(--fg-muted);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  td code { font-size: 0.85em; }
+  .tool-card {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 16px 0 24px;
+  }
+  .tool-card h3 { margin-top: 0; }
+  .tool-card .desc { color: var(--fg-muted); margin: 0 0 12px; }
+  .badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .badge.method-get { background: #1e3a52; color: #7dd3fc; }
+  .badge.method-post { background: #14532d; color: #86efac; }
+  ul.params { padding-left: 20px; margin: 8px 0; }
+  ul.params li { margin: 4px 0; }
+  ul.params .name { font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--accent); }
+  ul.params .type { color: var(--fg-muted); font-size: 12px; }
+  ul.params .req { color: var(--danger); font-size: 11px; margin-left: 4px; }
+  ul.params .opt { color: var(--fg-muted); font-size: 11px; margin-left: 4px; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  a { color: var(--accent); }
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: static; height: auto; }
+    main { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav>
+  <h1>Plus Tard MCP</h1>
+  <span class="tag">v0.1.0</span>
+  <ul>
+    <li><a href="#overview">Vue d'ensemble</a></li>
+    <li><a href="#prereq">Prérequis</a></li>
+    <li class="group">Connexion</li>
+    <li><a href="#claude-desktop">Claude Desktop</a></li>
+    <li><a href="#claude-code">Claude Code (CLI)</a></li>
+    <li><a href="#claude-ai">Claude.ai (web)</a></li>
+    <li><a href="#inspector">MCP Inspector</a></li>
+    <li class="group">Référence</li>
+    <li><a href="#tools">Tools</a></li>
+    <li><a href="#resources">Resources</a></li>
+    <li><a href="#errors">Codes d'erreur</a></li>
+    <li><a href="#workflows">Workflows types</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<h1 class="page-title">Plus Tard MCP — Documentation</h1>
+<p class="lede">
+  Connectez votre agent IA (Claude, Cursor, n8n…) à votre compte
+  <strong>Plus Tard</strong> pour planifier vos publications par
+  conversation naturelle.
+</p>
+
+<h2 id="overview">Vue d'ensemble</h2>
+<p>
+  Le serveur Plus Tard MCP est un pont entre les agents conversationnels
+  et l'API Plus Tard. Il expose <strong>5 tools</strong> et
+  <strong>2 resources</strong> que l'agent peut invoquer pour valider une
+  clef API, lister vos comptes, planifier un post, créer un nouvel
+  utilisateur, ou consulter ses providers connectés.
+</p>
+<p>
+  Le serveur tourne en HTTP (transport « Streamable HTTP » du protocole
+  MCP). L'authentification se fait par clef API personnelle, transmise
+  par l'agent à chaque requête.
+</p>
+
+<h2 id="prereq">Prérequis</h2>
+<ul>
+  <li>Une <strong>clef API Plus Tard</strong> active. Récupérable depuis
+    votre espace utilisateur sur <a href="https://plus-tard.com">plus-tard.com</a>.</li>
+  <li>L'URL du serveur MCP que votre administrateur vous a fournie. En
+    local pendant le développement :
+    <code>http://127.0.0.1:8001/mcp/</code> (slash final obligatoire).</li>
+  <li>Un client MCP : Claude Desktop, Claude Code, claude.ai, ou MCP
+    Inspector pour les tests.</li>
+</ul>
+
+<div class="callout warn">
+  <strong>Sécurité :</strong> votre clef API donne un accès complet à votre
+  compte Plus Tard. Ne la partagez pas, ne la committez jamais dans un
+  dépôt Git public, et révoquez-la depuis votre espace si vous suspectez
+  qu'elle a fuité.
+</div>
+
+<h2 id="claude-desktop">Connexion via Claude Desktop</h2>
+<p>
+  Claude Desktop ne parle nativement que le transport stdio. On utilise
+  l'utilitaire <code>mcp-remote</code> qui fait le pont avec un serveur HTTP.
+</p>
+<p>Éditez le fichier de configuration de Claude Desktop :</p>
+<p><code>~/Library/Application Support/Claude/claude_desktop_config.json</code> (macOS)</p>
+<span class="pre-label">claude_desktop_config.json</span>
+<pre><code>{
+  "mcpServers": {
+    "plus-tard": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "http://127.0.0.1:8001/mcp/",
+        "--header",
+        "X-Api-Key:${PLUS_TARD_TOKEN}"
+      ],
+      "env": {
+        "PLUS_TARD_TOKEN": "votre_clef_api_ici"
+      }
+    }
+  }
+}</code></pre>
+<p>
+  <strong>Quittez complètement Claude Desktop</strong> (menu → Quit, pas
+  juste fermer la fenêtre) puis relancez. L'icône MCP doit faire
+  apparaître <code>plus-tard</code> avec ses 5 tools.
+</p>
+<div class="callout">
+  Le format <code>X-Api-Key:${VAR}</code> ne tolère <strong>pas</strong>
+  d'espace après le <code>:</code>. C'est une particularité de
+  <code>mcp-remote</code>.
+</div>
+
+<h2 id="claude-code">Connexion via Claude Code (CLI)</h2>
+<span class="pre-label">terminal</span>
+<pre><code>claude mcp add plus-tard \
+  --transport http http://127.0.0.1:8001/mcp/ \
+  --header "X-Api-Key: votre_clef_api"</code></pre>
+<p>
+  Puis dans une session Claude Code, tapez <code>/mcp</code> pour vérifier
+  le statut. Les tools sont ensuite disponibles dans la session.
+</p>
+
+<h2 id="claude-ai">Connexion via Claude.ai (web)</h2>
+<p>
+  Si le serveur est exposé en HTTPS sur une URL publique, vous pouvez
+  l'ajouter directement comme « connecteur personnalisé » dans
+  <a href="https://claude.ai">claude.ai</a> :
+</p>
+<ol>
+  <li>Settings → <strong>Connectors</strong> → <strong>Add custom connector</strong></li>
+  <li>URL : <code>https://votre-domaine/mcp/</code></li>
+  <li>Header personnalisé : <code>X-Api-Key</code> = votre clef</li>
+</ol>
+<div class="callout warn">
+  Les URLs en <code>localhost</code> ne fonctionnent pas avec claude.ai.
+  Pour tester rapidement avec un tunnel : <code>ngrok http 8001</code>.
+</div>
+
+<h2 id="inspector">MCP Inspector (debug)</h2>
+<p>L'outil officiel pour tester un serveur MCP en local :</p>
+<span class="pre-label">terminal</span>
+<pre><code>npx @modelcontextprotocol/inspector</code></pre>
+<p>
+  Dans l'UI : Transport <strong>Streamable HTTP</strong>, URL
+  <code>http://127.0.0.1:8001/mcp/</code>, ajoutez un header
+  <code>X-Api-Key: votre_clef_api</code>, puis Connect. Vous verrez les
+  onglets Tools et Resources et pourrez tout tester via formulaire.
+</p>
+
+<h2 id="tools">Tools disponibles</h2>
+
+<div class="tool-card">
+  <h3>validate_api_key <span class="badge method-get">GET</span></h3>
+  <p class="desc">Vérifie que la clef API est valide et active.</p>
+  <p>Aucun paramètre. Retourne la date de création, d'expiration et de
+  dernière utilisation de la clef.</p>
+  <p><strong>Exemple d'utilisation :</strong> « <em>Ma clef Plus Tard est-elle toujours valide ?</em> »</p>
+</div>
+
+<div class="tool-card">
+  <h3>list_accounts <span class="badge method-get">GET</span></h3>
+  <p class="desc">Liste tous les comptes réseaux sociaux connectés à Plus Tard.</p>
+  <p>Aucun paramètre. Retourne pour chaque compte : nom, identifiant
+  interne Plus Tard, identifiant externe sur le réseau social.</p>
+  <p><strong>Exemple :</strong> « <em>Quels comptes ai-je connectés à Plus Tard ?</em> »</p>
+</div>
+
+<div class="tool-card">
+  <h3>schedule_post <span class="badge method-post">POST</span></h3>
+  <p class="desc">Planifie un post sur un seul réseau social.</p>
+  <ul class="params">
+    <li><span class="name">provider</span> <span class="type">enum</span> <span class="req">requis</span> — l'un de <code>facebook</code>, <code>instagram</code>, <code>linkedin</code>, <code>twitter</code>, <code>tiktok</code>, <code>threads</code>, <code>bluesky</code>, <code>google</code></li>
+    <li><span class="name">page_id</span> <span class="type">string</span> <span class="req">requis</span> — pour Facebook/Instagram, l'id du sous-compte (vu dans <code>list_accounts</code>) ; pour les autres providers, le <code>providerId</code> du compte</li>
+    <li><span class="name">planned_at</span> <span class="type">date-time</span> <span class="req">requis</span> — date/heure UTC ISO8601 (ex. <code>2026-05-01T10:00:00Z</code>)</li>
+    <li><span class="name">text</span> <span class="type">string</span> <span class="opt">optionnel</span> — texte du post</li>
+    <li><span class="name">image_posts</span> <span class="type">array</span> <span class="opt">optionnel</span> — URLs d'images ou vidéos. Chaque entrée peut être une chaîne (URL) ou <code>{"path": "URL", "isStory": false}</code></li>
+    <li><span class="name">twitter_params</span> <span class="type">object</span> <span class="opt">optionnel</span> — ex. <code>{"is_thread": true, "max_chars_per_tweet": 280}</code></li>
+    <li><span class="name">tiktok_params</span> <span class="type">object</span> <span class="opt">optionnel</span> — ex. <code>{"privacy_level": "PUBLIC_TO_EVERYONE"}</code></li>
+  </ul>
+  <div class="callout warn">
+    <strong>Un appel = un réseau.</strong> Pour publier sur N réseaux,
+    l'agent appelle ce tool N fois. <strong>Instagram</strong> exige au
+    moins une image ou vidéo dans <code>image_posts</code>.
+  </div>
+  <p><strong>Exemple :</strong> « <em>Programme un post Facebook sur ma page Boréales le 1er mai à 10h : "Hello le monde !"</em> »</p>
+</div>
+
+<div class="tool-card">
+  <h3>register_user <span class="badge method-post">POST</span></h3>
+  <p class="desc">Crée un nouvel utilisateur Plus Tard et retourne une URL OAuth pour qu'il connecte ses réseaux.</p>
+  <ul class="params">
+    <li><span class="name">email</span> <span class="type">string</span> <span class="opt">optionnel</span></li>
+    <li><span class="name">language</span> <span class="type">string</span> <span class="opt">optionnel</span> — <code>fr</code> ou <code>en</code> (défaut : <code>fr</code>)</li>
+  </ul>
+  <p>L'URL OAuth retournée est valide 24h. L'utilisateur final doit
+  l'ouvrir dans un navigateur pour connecter ses comptes.</p>
+</div>
+
+<div class="tool-card">
+  <h3>get_user <span class="badge method-get">GET</span></h3>
+  <p class="desc">Détail d'un utilisateur : ses providers connectés et leurs sous-comptes.</p>
+  <ul class="params">
+    <li><span class="name">user_id</span> <span class="type">integer</span> <span class="req">requis</span></li>
+  </ul>
+  <p>À utiliser typiquement avant <code>schedule_post</code> pour
+  identifier le bon <code>page_id</code>.</p>
+</div>
+
+<h2 id="resources">Resources</h2>
+<p>
+  Les <strong>resources</strong> MCP sont des données en lecture seule
+  que l'agent peut consulter pour s'orienter. Dans Claude Desktop, elles
+  apparaissent dans le picker de pièces jointes.
+</p>
+<table>
+  <thead>
+    <tr><th>URI</th><th>Contenu</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>plus-tard://accounts</code></td>
+      <td>Liste JSON de tous les comptes connectés (id, nom, identifiant externe).</td>
+    </tr>
+    <tr>
+      <td><code>plus-tard://users/{user_id}</code></td>
+      <td>Détail JSON d'un utilisateur : email, langue, providers, sous-comptes.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="errors">Codes d'erreur</h2>
+<p>Le serveur remonte les erreurs de l'API Plus Tard avec un message lisible :</p>
+<table>
+  <thead>
+    <tr><th>Code</th><th>Cause</th><th>Que faire</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>401</code></td><td>Header <code>X-Api-Key</code> absent ou clef rejetée par l'API</td><td>Vérifier la configuration du client MCP, régénérer la clef si besoin</td></tr>
+    <tr><td><code>400</code></td><td>Paramètres manquants ou invalides (ex. format de date, provider inconnu)</td><td>Le message inclut <code>error_description</code> avec le détail</td></tr>
+    <tr><td><code>403</code></td><td>Accès refusé (ressource n'appartenant pas au détenteur de la clef)</td><td>Vérifier que la clef correspond bien au compte cible</td></tr>
+    <tr><td><code>404</code></td><td>Ressource introuvable (user_id inconnu, etc.)</td><td>Vérifier l'identifiant</td></tr>
+    <tr><td><code>409</code></td><td>Conflit (ex. email déjà enregistré)</td><td>Adapter la requête</td></tr>
+    <tr><td><code>502</code></td><td>API Plus Tard injoignable ou en erreur 5xx</td><td>Réessayer dans quelques minutes</td></tr>
+    <tr><td><code>504</code></td><td>L'API Plus Tard a dépassé le délai de 10 secondes</td><td>Réessayer</td></tr>
+  </tbody>
+</table>
+
+<h2 id="workflows">Workflows types</h2>
+
+<h3>Planifier un post sur Facebook</h3>
+<ol>
+  <li>L'utilisateur dit : « <em>Programme un post sur ma page Plus Tard le 1er mai à 10h : "Notre nouveau post !"</em> »</li>
+  <li>L'agent appelle <code>list_accounts</code> pour identifier le <code>page_id</code> de la page « Plus Tard ».</li>
+  <li>L'agent appelle <code>schedule_post(provider="facebook", page_id="...", planned_at="2026-05-01T10:00:00Z", text="Notre nouveau post !")</code>.</li>
+  <li>L'agent confirme : « <em>Post #456 planifié sur facebook le 01/05/2026 à 10h.</em> »</li>
+</ol>
+
+<h3>Onboarder un nouveau client</h3>
+<ol>
+  <li>« <em>Crée un compte Plus Tard pour client@exemple.com en français.</em> »</li>
+  <li>L'agent appelle <code>register_user(email="client@exemple.com", language="fr")</code>.</li>
+  <li>L'agent affiche l'URL OAuth retournée et vous invite à l'envoyer au client.</li>
+</ol>
+
+<h3>Vérifier une connexion bloquée</h3>
+<ol>
+  <li>« <em>Pourquoi je ne peux pas planifier ? Ma clef est-elle bonne ?</em> »</li>
+  <li>L'agent appelle <code>validate_api_key</code> et affiche les dates d'expiration.</li>
+</ol>
+
+<hr>
+<p style="color: var(--fg-muted); font-size: 13px;">
+  Plus Tard MCP — version 0.1.0 · Documentation API Plus Tard v1.2 ·
+  Pour toute question : <a href="mailto:support@plus-tard.com">support@plus-tard.com</a>
+</p>
+
+</main>
+</div>
+</body>
+</html>
