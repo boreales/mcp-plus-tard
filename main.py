@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Request
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 from app.config import get_settings
 from app.services import PlusTardClient
@@ -38,7 +39,29 @@ def _build_client() -> PlusTardClient:
     return PlusTardClient(token=_current_api_key())
 
 
-mcp = FastMCP("plus-tard", streamable_http_path="/")
+# DNS rebinding protection: only allow our public hostname + localhost
+# (for local dev and the in-container healthcheck).
+_security = TransportSecuritySettings(
+    enable_dns_rebinding_protection=True,
+    allowed_hosts=[
+        "mcp.plus-tard.com",
+        "127.0.0.1",
+        "127.0.0.1:8001",
+        "localhost",
+        "localhost:8001",
+    ],
+    allowed_origins=[
+        "https://mcp.plus-tard.com",
+        "http://127.0.0.1:8001",
+        "http://localhost:8001",
+    ],
+)
+
+mcp = FastMCP(
+    "plus-tard",
+    streamable_http_path="/",
+    transport_security=_security,
+)
 
 
 @mcp.tool()
