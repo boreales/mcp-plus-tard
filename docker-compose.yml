@@ -4,12 +4,27 @@ services:
     container_name: plus-tard-mcp
     restart: unless-stopped
     env_file: .env
-    # Bind to localhost only — Nginx will proxy from the public domain.
-    ports:
-      - "127.0.0.1:8001:8001"
+    environment:
+      # Picked up by nginx-proxy + letsencrypt-companion to publish at
+      # https://mcp.plus-tard.com automatically.
+      VIRTUAL_HOST: mcp.plus-tard.com
+      VIRTUAL_PORT: "8001"
+      LETSENCRYPT_HOST: mcp.plus-tard.com
+      LETSENCRYPT_EMAIL: contact@plus-tard.com
+    expose:
+      - "8001"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8001/health',timeout=3).status==200 else 1)"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - default
+      - nginx-proxy_proxy
+
+networks:
+  default:
+    name: plus-tard-mcp-stack
+  nginx-proxy_proxy:
+    external: true

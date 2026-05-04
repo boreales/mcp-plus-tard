@@ -1,66 +1,75 @@
-# Déploiement MCP sur VPS Ubuntu (Nginx + Docker)
+# Déploiement MCP sur VPS Ubuntu (nginx-proxy + Docker)
 
-## 1. Préparer le serveur (une fois)
+Ce projet est conçu pour s'intégrer dans un stack VPS qui utilise déjà
+[nginx-proxy](https://github.com/nginx-proxy/nginx-proxy) +
+[acme-companion](https://github.com/nginx-proxy/acme-companion) pour
+servir plusieurs sites Docker en HTTPS automatique (comme le projet
+Plus Tard principal).
+
+Aucun fichier vhost manuel : nginx-proxy détecte le conteneur et publie
+le sous-domaine tout seul à partir des variables d'environnement.
+
+## 1. Prérequis sur le VPS
+
+- nginx-proxy déjà en place avec son réseau externe `nginx-proxy_proxy`
+- acme-companion (Let's Encrypt) déjà en place
+- Le DNS `mcp.plus-tard.com` pointe sur le VPS (DNS only, voir notes)
+
+## 2. Cloner et configurer
 
 ```bash
-# Sur le VPS, dans le répertoire où tu héberges tes services Docker
-cd /srv  # ou /opt, /var/www — adapte au standard de ton VPS
+cd /srv  # ou ton emplacement habituel
 sudo git clone <url-du-repo> mcp-plustard
 cd mcp-plustard
+
+cp .env.example .env
+sudo nano .env
+# PLUS_TARD_BASE_URL=https://plus-tard.com
+# MCP_HOST=0.0.0.0
+# MCP_PORT=8001
 ```
 
-## 2. Configurer l'environnement
+## 3. Installer le snippet Nginx pour le SSE (une fois)
+
+Le MCP utilise Server-Sent Events. Sans désactiver le buffering, les
+sessions sont coupées. nginx-proxy permet d'ajouter un fichier de config
+par vhost dans `/etc/nginx/vhost.d/<hostname>` du conteneur nginx-proxy.
+
+Le stack nginx-proxy de Plus Tard utilise un **volume Docker nommé**
+(`vhost`) pour `/etc/nginx/vhost.d`, donc on copie le fichier directement
+dans le conteneur :
 
 ```bash
-cp .env.example .env
-# Édite .env :
-#   PLUS_TARD_BASE_URL=https://plus-tard.com   (ou l'URL interne du conteneur Symfony)
-#   MCP_HOST=0.0.0.0
-#   MCP_PORT=8001
-nano .env
+sudo docker cp deploy/vhost.d/mcp.plus-tard.com \
+               nginx-proxy:/etc/nginx/vhost.d/mcp.plus-tard.com
+
+sudo docker exec nginx-proxy nginx -s reload
 ```
 
-> **Note** : si tu veux que le MCP appelle Plus Tard via le réseau Docker
-> interne (plus rapide, ne sort pas sur internet), partage le même
-> network entre le conteneur Symfony et celui-ci, et utilise le nom de
-> service Docker comme host (ex. `PLUS_TARD_BASE_URL=http://plustard-app`).
-> Pour démarrer simple, garde l'URL publique : ça marche tout de suite.
+> Le volume `vhost` étant persistant, le fichier survit aux redémarrages
+> et upgrades du conteneur nginx-proxy. Si tu recrées **complètement**
+> le stack nginx-proxy (ex. `docker compose down -v`), il faudra
+> réappliquer cette étape.
 
-## 3. Lancer le conteneur
+## 4. Démarrer le conteneur MCP
 
 ```bash
 sudo docker compose up -d --build
-sudo docker compose logs -f mcp   # vérifie le démarrage, Ctrl+C pour quitter
-curl http://127.0.0.1:8001/health
-# → {"status":"ok"}
+sudo docker compose logs -f mcp   # vérifie le démarrage
 ```
 
-## 4. Configurer Nginx
+nginx-proxy détecte le conteneur via les vars `VIRTUAL_HOST` /
+`VIRTUAL_PORT` et acme-companion demande le certificat à Let's Encrypt
+via `LETSENCRYPT_HOST`. Compte ~30 s pour que le certificat soit délivré
+au premier démarrage.
+
+## 5. Tester depuis l'extérieur
 
 ```bash
-sudo cp deploy/nginx.conf.example /etc/nginx/sites-available/mcp.plus-tard.com
-sudo ln -s /etc/nginx/sites-available/mcp.plus-tard.com /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-## 5. Obtenir le certificat TLS
-
-```bash
-sudo certbot --nginx -d mcp.plus-tard.com
-```
-
-certbot édite la config Nginx pour pointer vers les bons fichiers. Le
-renouvellement est automatique (vérifie avec `systemctl list-timers | grep certbot`).
-
-## 6. Tester depuis l'extérieur
-
-```bash
-# Depuis ta machine, pas le VPS
 curl https://mcp.plus-tard.com/health
 # → {"status":"ok"}
 
-# Test MCP initialize
+# Test MCP initialize complet
 curl -i -X POST https://mcp.plus-tard.com/mcp/ \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
@@ -69,7 +78,7 @@ curl -i -X POST https://mcp.plus-tard.com/mcp/ \
 # Statut attendu: 200 OK + content-type: text/event-stream
 ```
 
-## 7. Mettre à jour le serveur
+## 6. Mettre à jour le serveur
 
 ```bash
 cd /srv/mcp-plustard
@@ -77,23 +86,42 @@ sudo git pull
 sudo docker compose up -d --build
 ```
 
-Pas besoin de toucher Nginx — il proxie un port local fixe.
+Pas besoin de toucher nginx-proxy. Le snippet vhost.d reste en place.
 
-## Vérifier que tout va bien
+## Notes utiles
+
+### Pare-feu
+
+Aucun port à ouvrir pour le MCP : il n'est pas exposé directement
+(`expose: 8001` rend le port visible uniquement aux conteneurs partageant
+le network). Seuls 80 + 443 du nginx-proxy sont accessibles, et c'est
+nginx-proxy qui parle au conteneur via le réseau Docker.
+
+### Cloudflare
+
+Garde `mcp.plus-tard.com` en **DNS only** (nuage gris) au moins au
+démarrage, pour que SSE passe sans buffering proxy ni timeout
+artificiel. Tu pourras passer en proxied plus tard si tu prends un plan
+Business / Enterprise.
+
+### Diagnostic
 
 ```bash
-# logs récents
+# Logs du MCP
 sudo docker compose logs --tail=200 mcp
 
-# état du conteneur
-sudo docker compose ps
+# Logs du nginx-proxy (depuis son stack)
+sudo docker logs <nom-conteneur-nginx-proxy> --tail=200
 
-# stats
-sudo docker stats plus-tard-mcp --no-stream
+# Logs d'acme-companion (si le certif n'arrive pas)
+sudo docker logs <nom-conteneur-acme-companion> --tail=200
 ```
 
-## Pare-feu
+### Plus Tard sur le même VPS
 
-Le port 8001 doit rester **fermé** sur l'interface publique (le bind
-`127.0.0.1:8001` du `docker-compose.yml` le garantit). Seuls 80 + 443
-sont exposés, et c'est Nginx qui parle au conteneur en local.
+`PLUS_TARD_BASE_URL=https://plus-tard.com` (URL publique) est le plus
+simple et marche tout de suite. Si tu veux que le MCP appelle Symfony
+via le réseau Docker interne (un hop en moins), ajoute le réseau du
+stack Plus Tard dans `docker-compose.yml` et utilise
+`PLUS_TARD_BASE_URL=http://<nom-service-symfony>` — mais ce n'est pas
+prioritaire.
