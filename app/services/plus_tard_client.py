@@ -8,7 +8,6 @@ from fastapi import HTTPException
 
 from app.config import get_settings
 from app.models import (
-    AccountsResponse,
     GetUserResponse,
     OAuthUrlResponse,
     RegisterUserResponse,
@@ -22,8 +21,6 @@ class PlusTardClient:
     """Async client wrapping the Plus Tard Symfony API.
 
     One instance per incoming MCP request — bound to a single user token.
-    Most endpoints speak plain JSON; `/api/accounts` is auto-exposed by
-    API Platform and only speaks JSON-LD/Hydra.
     """
 
     def __init__(self, token: str) -> None:
@@ -125,14 +122,10 @@ class PlusTardClient:
         response = await self._request("GET", "/api/auth/validate")
         return ValidateApiKeyResponse.model_validate(response.json())
 
-    async def list_accounts(self) -> AccountsResponse:
-        # API Platform auto-exposed resource — JSON-LD only.
-        response = await self._request(
-            "GET",
-            "/api/accounts",
-            extra_headers={"Accept": "application/ld+json"},
-        )
-        return AccountsResponse.model_validate(response.json())
+    async def get_me(self) -> GetUserResponse:
+        """The API key owner, with their connected providers."""
+        response = await self._request("GET", "/api/auth/me")
+        return GetUserResponse.model_validate(response.json())
 
     async def schedule_post(
         self, payload: SchedulePostRequest

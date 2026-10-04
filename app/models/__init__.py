@@ -1,4 +1,3 @@
-from app.models.account import Account, AccountsResponse
 from app.models.post import (
     HydraResource,
     Provider,
@@ -17,8 +16,6 @@ from app.models.user import (
 )
 
 __all__ = [
-    "Account",
-    "AccountsResponse",
     "ApiKeyInfo",
     "GetUserResponse",
     "HydraResource",

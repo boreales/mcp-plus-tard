@@ -18,6 +18,7 @@ from app.tools import (
     schedule_post as tool_schedule_post,
     validate_api_key as tool_validate_api_key,
 )
+from app.tools.list_accounts import publishable_accounts
 
 # Per-request token, captured by middleware before MCP dispatch.
 _api_key_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
@@ -112,17 +113,12 @@ async def schedule_post(
     IMPORTANT :
     - Un appel = un réseau. Pour publier sur plusieurs réseaux, appelle
       ce tool plusieurs fois.
-    - AVANT D'APPELER ce tool : appelle d'abord list_accounts (ou
-      get_user pour la vue détaillée) pour obtenir le page_id correct.
-    - Le `page_id` à passer ici est l'identifiant EXTERNE du compte sur
-      le réseau social (champ `accountId` / `page_id` retourné par
-      list_accounts, ex. "1097653263583548"), PAS l'identifiant interne
-      Plus Tard (champ `id` / `internal_id`, ex. "34"). Confondre les
-      deux crée un post mal rattaché et apparaissant comme "compte
-      déconnecté".
-    - Pour les providers sans sous-comptes (Twitter, LinkedIn, TikTok,
-      Threads, Bluesky, Google), utilise le `providerId` retourné par
-      get_user.
+    - AVANT D'APPELER ce tool : appelle d'abord list_accounts pour
+      obtenir le `provider` et le `page_id` du compte cible, et passe-les
+      tels quels. Le `page_id` est l'identifiant EXTERNE du compte sur le
+      réseau social (ex. "1097653263583548") : n'utilise jamais un
+      identifiant interne Plus Tard, cela crée un post mal rattaché qui
+      apparaît comme "compte déconnecté".
     - Instagram exige au moins une image ou vidéo dans image_posts.
     - planned_at doit être une date/heure UTC future au format ISO8601
       (ex: 2026-05-01T10:00:00Z).
@@ -172,19 +168,15 @@ async def accounts_resource() -> str:
     import json
 
     async with _build_client() as client:
-        response = await client.list_accounts()
+        response = await client.get_me()
     payload = [
         {
+            "provider": a.provider,
             "name": a.name,
-            "page_id": a.account_id,
-            "internal_id": a.id,
-            "_hint": (
-                "page_id is the value to pass to schedule_post; "
-                "internal_id is the Plus Tard internal id and must NOT "
-                "be used as page_id."
-            ),
+            "page_id": a.page_id,
+            "_hint": "provider and page_id are the values to pass to schedule_post.",
         }
-        for a in response.accounts
+        for a in publishable_accounts(response.user)
     ]
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
