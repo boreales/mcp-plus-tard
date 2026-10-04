@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(curl -sk -o /dev/null -w '%{http_code}' -H 'Accept: application/json' https://localhost:8000__TRACKED_VAR__ --max-time 5)",
-      "Bash(curl -s -o /dev/null -w '%{http_code}' -H 'X-Api-Key: cfd6f85dc08596f2d2b4392300505d8462b418d05ad26929223c781cfc946c8b' -H 'Accept: application/json' https://plus-tard.com__TRACKED_VAR__ --max-time 5)",
-      "Bash(/opt/anaconda3/bin/python -m pytest tests/ -q)"
-    ]
-  }
-}
